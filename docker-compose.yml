@@ -1,0 +1,52 @@
+# docker-Définit la version utilisée par compose.
+version: "3"
+#Chaque élément qui exécute l'application. Dans les services, app, db et phpmyadmin sont définis comme des éléments enfants.
+services:
+   #Les conteneurs qui exécutent laravel sont répertoriés ci-dessous à partir d'ici.
+   app:
+      #Décidez ici du nom du conteneur.
+      container_name: laravel_app
+      #C'est un paramètre du port à connecter. Il connecte le port 8080 de l'hôte et le port 80 du conteneur. L'hôte virtuel sur le port 80 est 000-default.Il a déjà été défini dans conf.
+      ports:
+         - "8000:80"
+      #Spécifie l'emplacement des paramètres Dockerfile. Construisez en fonction du contenu du Dockerfile.
+      build: ./Docker/App
+      #L'emplacement où le conteneur et les répertoires côté hôte sont synchronisés est spécifié ici. Voici la source du laravel.
+      volumes:
+         - ./src:/var/www/html
+   #Le conteneur qui exécute MySQL est défini à partir d'ici.
+   db:
+      #MySQL 5 depuis Docker Hub.C'est un paramètre qui tire l'image officielle de 7.
+      image: mysql:5.7
+      #Le nom du conteneur est spécifié.
+      container_name: laravel_db
+      #La variable d'environnement dans le conteneur de MySQL est spécifiée. Veuillez en définir un.
+      environment:
+         MYSQL_ROOT_PASSWORD: root
+         MYSQL_DATABASE: laraveldb
+         MYSQL_USER: dbuser
+         MYSQL_PASSWORD: dbpass
+         TZ: "Asia/Tokyo"
+      #C'est la commande au démarrage.
+      command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      #Les répertoires sont synchronisés. Veuillez noter que si vous n'écrivez pas ici, la base de données perdra des données lorsque vous fermerez le conteneur. Pour plus d'informations, vous pouvez vérifier la persistance du docker.
+      volumes:
+         - ./Docker/DB/volume:/var/lib/mysql
+         - ./Docker/DB/my.cnf:/etc/mysql/conf.d/my.cnf
+      #C'est un paramètre pour se connecter au port 13306 de l'hôte et au port 3306 dans le conteneur.
+      ports:
+         - 13306:3306
+   #Les paramètres de phpmyadmin sont décrits dans l'écriture.
+   phpmyadmin:
+      #Le nom du conteneur est décidé.
+      container_name: phpmyadmin
+      #C'est un paramètre qui extrait l'image de phpmyadmin de Docker Hub.
+      image: phpmyadmin/phpmyadmin
+      #C'est le réglage de la variable d'environnement de phpmyadmin. Veuillez consulter et décrire les paramètres MySQL. PMA_La base de données des services est spécifiée pour HOSTS.
+      environment:
+         - PMA_ARBITRARY=1
+         - PMA_HOSTS=db
+         - PMA_USER=root
+         - PMA_PASSWORD=root
+      ports:
+         - 3000:80
